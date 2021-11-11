@@ -2,7 +2,7 @@ data "aws_iam_policy" "AmazonEC2RoleforAWSCodeDeploy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
 }
 resource "aws_iam_role" "devops_ec2codedeploy_role" {
-  name = "devops2_ec2codedeploy_role"
+  name = "codedeploy-${var.app_name}"
 
   assume_role_policy = <<EOF
 {
@@ -31,9 +31,8 @@ resource "aws_iam_role_policy_attachment" "ec2_fullaccess_attach" {
   policy_arn = data.aws_iam_policy.AmazonEC2RoleforAWSCodeDeploy.arn
 }
 
-
 resource "aws_iam_instance_profile" "ec2_cd_instance_profile" {
-  name = "ec2_cd_instance_profile"
+  name = "ec2_cd_instance-${var.app_name}"
   role = aws_iam_role.devops_ec2codedeploy_role.name
 }
 
@@ -41,11 +40,8 @@ data "aws_iam_policy" "AWSCodeDeployRole" {
   arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
 }
 
-
-
-
 resource "aws_iam_role" "codedeploy-access" {
-  name               = "codedeploy-access"
+  name               = "codedeploy-access-${var.app_name}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -60,13 +56,13 @@ resource "aws_iam_role" "codedeploy-access" {
   })
 }
   
-resource "aws_iam_role_policy_attachment" "test-attach" {
+resource "aws_iam_role_policy_attachment" "codedeploy-attach" {
   role       = aws_iam_role.codedeploy-access.name
   policy_arn = data.aws_iam_policy.AWSCodeDeployRole.arn
 }
 
 resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-access-backend"
+  name = "codepipeline-access-backend-${var.app_name}"
 
   assume_role_policy = <<EOF
 {
@@ -85,7 +81,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
+  name = "codepipeline_policy_${var.app_name}"
   role = aws_iam_role.codepipeline_role.id
 
   policy = <<EOF
@@ -265,8 +261,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 EOF
 }
 
-resource "aws_iam_role" "example" {
-  name = "codebuild-access-3"
+resource "aws_iam_role" "codebuild-role" {
+  name = "codebuild-access-${var.app_name}"
 
   assume_role_policy = <<EOF
 {
@@ -284,8 +280,8 @@ resource "aws_iam_role" "example" {
 EOF
 }
 
-resource "aws_iam_role_policy" "example" {
-  role = aws_iam_role.example.name
+resource "aws_iam_role_policy" "codebuild-policy" {
+  role = aws_iam_role.codebuild-role.name
 
   policy = <<POLICY
 {
